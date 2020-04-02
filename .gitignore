@@ -2,3 +2,4 @@ dbconf.json
 dst/
 node_modules/
 log/
+p5*

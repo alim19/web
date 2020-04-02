@@ -78,6 +78,7 @@ function joinGame(socket : io.Socket, args : any){
 }
 
 function API(req : express.Request, res : express.Response, next : express.NextFunction){
+    Games.query("delete from active_games where active_game_idle < (now()- INTERVAL 30 MINUTE) and active_game_id > 0;");
     if(!/^\/games\/api\/.+/.test(req.path)) {
         next();
         return;
@@ -181,42 +182,6 @@ function createGame(game : string ,req : express.Request, res : express.Response
     }else{
         query = `SELECT ${DB.games.game_id.column}, ${DB.games.game_name.column} FROM ${DB.games.table} WHERE ${DB.games.game_name.column} = ${mysql.escape(game)};`;
     }
-
-    // let query_cb : mysql.queryCallback = (err : mysql.MysqlError, results : any, fields : mysql.FieldInfo[]) => {
-    //     //got game name and ID, now create new game from that info
-    //     let game_id : number = results[0].game_id;
-    //     let game_name : string = results[0].game_name;
-    //     let game_prom : Promise<Game>;
-    //     if(!loadedGames[game_id]){
-    //         game_prom = new Promise((resolve, reject) => {
-    //             let import_prom : Promise<any>;
-    //             import_prom = import(`./games/${game_name}`)
-    //             .then((_game : any) => {
-    //                 let game : Game = _game.game;
-    //                 loadedGames[game_id] = game;
-    //                 console.log(game);
-    //                 game.init(Games);
-    //                 resolve(loadedGames[game_id]);
-    //             }).catch(reject);
-    //         })
-    //     }else{
-    //         game_prom = new Promise((resolve, reject) => {
-    //             resolve(loadedGames[game_id]);
-    //         })
-    //     }
-    //     game_prom.then((game : Game) => {
-    //         debug(`Creating game by Alex. CHANGE`);
-    //         game.create("Alex").then(active_game_id => {
-    //             res.send(`Created new ${game_name} game by ${"Alex"} with id ${active_game_id}`);
-    //             res.end();
-    //         });
-    //     }).catch(err => {
-    //         //game does not exist
-    //         console.log(`Game ${game_name}:${game_id} does not exist!`);
-    //         next(500);
-
-    //     });
-    // };
 
     Games.query(query)
     .then(results => {
