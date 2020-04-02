@@ -207,7 +207,8 @@ function createGame(game : string ,req : express.Request, res : express.Response
         }
         game_prom.then((game : Game) => {
             debug(`Creating game by Alex. CHANGE`);
-            game.create("Alex").then(active_game_id => {
+            console.log(req.body);
+            game.create(req.body.name, req.body.password).then(active_game_id => {
                 res.send(`Created new ${game_name} game by ${"Alex"} with id ${active_game_id}`);
                 res.end();
             });

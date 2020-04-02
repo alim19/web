@@ -21,7 +21,7 @@ const battleships : GameConstructor = class battleships implements Game{
             .then(results => {
                 console.log(results.results);
                 resolve(results.results.insertId || -1);
-                let json_data : any = {name: "Alex's battleships V2", players : []};
+                let json_data : any = {name: creator, players : [], password : password};
                 if(password){
                     json_data.password = password;
                 }

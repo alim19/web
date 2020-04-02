@@ -5,15 +5,22 @@ import {Log} from "./log"
 import * as error from "./error"
 import {staticServe as serve} from "./sendFile"
 import {game_api} from "./games"
+import * as bodyParser from "body-parser";
+import multer = require("multer");
 
+const upload = multer();
 const app : express.Application = express();
 const PORT : number = parseInt(process.env.PORT) || 8080;
 
 let server = app.listen(PORT, () => {console.log(`Listening on port ${PORT}`)});
 const GAMES = game_api(server);
 
+app.use(bodyParser.json());
+// app.post('*', upload.array())
+
 app.use(Log);
 app.use(GAMES.API);
+
 
 app.use(autoredir);
 
