@@ -6,6 +6,7 @@ import { debug } from "./debug";
 import { Game, GameConstructor } from "./games/game";
 import { resolve } from "dns";
 import { GameDB } from "./gamedb";
+import { readFileSync } from "fs";
 
 const DB = {
     active_games : {
@@ -43,12 +44,7 @@ const DB = {
 
     }
 }
-const MYSQL_CONFIG : mysql.ConnectionConfig = {
-    host : "localhost",
-    user : "web-games",
-    password : "web-games-password",
-    database : "web_games_db"
-}
+const MYSQL_CONFIG : mysql.ConnectionConfig = JSON.parse(readFileSync("./dbconf.json").toString());
 const Games : GameDB = new GameDB(MYSQL_CONFIG);
 
 // POOL.getConnection((err) => {
