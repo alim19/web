@@ -335,6 +335,7 @@ const battleships : GameConstructor = class battleships implements Game{
 
     leave(sock_id : string){
         let player = this.getPlayer(sock_id);
+        if(!player) return;
         this.players = this.players.filter(p => p==player?0:1);
         let game_id = player.game_id;
         this.db.query(`SELECT data_key, data_value FROM game_data WHERE game_id = ${game_id} AND data_key = 0;`)
