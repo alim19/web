@@ -75,6 +75,7 @@ function joinGame(){
 function createGame(){
 
     let name = prompt("Please enter game name", "name");
+    if(name == null) return;
     let password = prompt("Enter password, \nor leave blank for open game.");
     let data = {
         name : name,
