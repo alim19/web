@@ -60,7 +60,8 @@ let socket;
 
 
 function joinGame(socket : io.Socket, args : any){
-    console.log(`Join game request : ${args}`);
+    console.log(`Join game request : `);
+    console.log(args);
 
     //check game id exists
 
@@ -70,15 +71,21 @@ function joinGame(socket : io.Socket, args : any){
             console.log(res.err);
             return;
         }
-        console.log(res.results);
+        // console.log(res.results);
         if(res.results.length == 0){
+            socket.emit('disconnect', "Game does not exist");
+            console.log("disconnecting socket");
             socket.disconnect(true);
+            return;
         }
-    });
+        return getGame(res.results[0].active_game_type_id);
+    }).then(game => {
+        return game.join(socket, args);
+    }).catch(()=>{});
 }
 
-function API(req : express.Request, res : express.Response, next : express.NextFunction){
-    Games.query("delete from active_games where active_game_idle < (now()- INTERVAL 30 MINUTE) and active_game_id > 0;");
+async function API(req : express.Request, res : express.Response, next : express.NextFunction){
+    await Games.query("delete from active_games where active_game_idle < (now()- INTERVAL 30 MINUTE) and active_game_id > 0;");
     if(!/^\/games\/api\/.+/.test(req.path)) {
         next();
         return;
@@ -129,12 +136,33 @@ function listGames(game : string, response : express.Response, next : express.Ne
     //get all active games by game name/id
 
     
+    Games.getActiveGames(game)
+    .then(games => {
+        let data = [];
+            for(let game of games){
+                data.push({
+                    name : game.data.name,
+                    id : game.id,
+                    players : game.data.players.length,
+                    password : game.data.password,
+                })
+            }
+
+            response.type('application/json');
+            response.send(data);
+            response.end();
+        })
+        .catch(console.log)
+        .catch(next)
+    return;
+
+    
     console.log(`Listing games for : ${game}`);
     let query : string
     if(/^[0-9]+$/.test(game)){
-        query = `SELECT ${DB.active_games.active_game_id.column},${DB.game_data.data_value.column} FROM ${DB.active_games.table}, ${DB.game_data.table}, ${DB.games.table} WHERE ${DB.games.game_id.column} = ${game} AND ${DB.active_games.active_game_id.column} = ${DB.game_data.game_id.column};`
+        query = `SELECT ${DB.active_games.active_game_id.column},${DB.game_data.data_value.column} FROM ${DB.active_games.table}, ${DB.game_data.table}, ${DB.games.table} WHERE ${DB.games.game_id.column} = ${game} AND ${DB.active_games.active_game_id.column} = ${DB.game_data.game_id.column} AND ${DB.game_data.data_key.column} = 0;`
     }else{
-        query = `SELECT ${DB.active_games.active_game_id.column},${DB.game_data.data_value.column} FROM ${DB.active_games.table}, ${DB.game_data.table}, ${DB.games.table} WHERE ${DB.games.game_name.column} = ${mysql.escape(game)} AND ${DB.active_games.active_game_id.column} = ${DB.game_data.game_id.column};`
+        query = `SELECT ${DB.active_games.active_game_id.column},${DB.game_data.data_value.column} FROM ${DB.active_games.table}, ${DB.game_data.table}, ${DB.games.table} WHERE ${DB.games.game_name.column} = ${mysql.escape(game)} AND ${DB.active_games.active_game_id.column} = ${DB.game_data.game_id.column} AND ${DB.game_data.data_key.column} = 0;`
     }
 
     Games.query(query)
@@ -153,8 +181,14 @@ function listGames(game : string, response : express.Response, next : express.Ne
             let row = results.results[key];
             let data_value = JSON.parse(row.data_value);
             data_value.id = row.active_game_id;
+            data.push({
+                name : data_value.name,
+                id : data_value.id,
+                players : data_value.players.length,
+                password_protected : data_value.password?true:false
+            })
             debug(data_value);
-            data.push(data_value);
+            // data.push(data_value);
             // data[row.active_game_id] = data_value;
         }
         // console.log(JSON.parse(res));
@@ -176,15 +210,30 @@ function createGame(game : string ,req : express.Request, res : express.Response
         next();
         return;
     }
+
+    return getGame(game).then((game : Game) => {
+        debug(`Creating game by Alex. CHANGE`);
+        console.log(req.body);
+        game.create(req.body.name, req.body.password).then(active_game_id => {
+            res.send(`Created new ${game.name} game by ${"Alex"} with id ${active_game_id}`);
+            res.end();
+        });
+    }).catch(next)
+}
+
+function getGame(game : string | number) : Promise<Game>{
     let query : string
-    if(/^[0-9]+$/.test(game)){
+    if(typeof(game) == 'number' || /^[0-9]+$/.test(game)){
         query = `SELECT ${DB.games.game_id.column}, ${DB.games.game_name.column} FROM ${DB.games.table} WHERE ${DB.games.game_id.column} = ${game};`;
     }else{
         query = `SELECT ${DB.games.game_id.column}, ${DB.games.game_name.column} FROM ${DB.games.table} WHERE ${DB.games.game_name.column} = ${mysql.escape(game)};`;
     }
 
-    Games.query(query)
+    return Games.query(query)
+
     .then(results => {
+        // console.log(query);
+        // console.log(results);
         let game_id : number = results.results[0].game_id;
         let game_name : string = results.results[0].game_name;
         let game_prom : Promise<Game>;
@@ -195,7 +244,7 @@ function createGame(game : string ,req : express.Request, res : express.Response
                 .then((_game : any) => {
                     let game : GameConstructor = _game.game;
                     loadedGames[game_id] = new game(Games);
-                    console.log(loadedGames[game_id]);
+                    // console.log(loadedGames[game_id]);
                     // game.init(Games);
                     resolve(loadedGames[game_id]);
                 }).catch(reject);
@@ -205,20 +254,14 @@ function createGame(game : string ,req : express.Request, res : express.Response
                 resolve(loadedGames[game_id]);
             })
         }
-        game_prom.then((game : Game) => {
-            debug(`Creating game by Alex. CHANGE`);
-            console.log(req.body);
-            game.create(req.body.name, req.body.password).then(active_game_id => {
-                res.send(`Created new ${game_name} game by ${"Alex"} with id ${active_game_id}`);
-                res.end();
-            });
-        }).catch(err => {
-            //game does not exist
-            console.log(`Game ${game_name}:${game_id} does not exist!`);
-            next(500);
 
-        });
-    }).catch(next)
+        return game_prom;
+    }).catch((err)=>{
+        console.log("Server Error! Game not found!");
+        console.log(err);
+        return Promise.reject(500);
+    })
+
 }
 
 export {game_api};

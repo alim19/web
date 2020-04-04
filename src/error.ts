@@ -36,7 +36,8 @@ function handled_error(err : express.Errback, req : express.Request, res : expre
     
     res.status(500);
     sendFile(`public/errors/500.html`, req, res, next);
-    
+    console.log("SERVER ERROR")
+    console.log(err);
     // next();
 }
 

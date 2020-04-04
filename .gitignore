@@ -1,5 +1,9 @@
 dbconf.json
 dst/
 node_modules/
+launch.json
 log/
-p5*
+**/*.d.ts
+**/*.zip
+public/**/*.ts
+public/**/tsconfig.json
