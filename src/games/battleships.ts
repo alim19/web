@@ -266,6 +266,7 @@ const battleships : GameConstructor = class battleships implements Game{
                         break;
                 }
                 let hits = ship.size-1;
+                let hit : boolean = false;
                 for(let i = 0; i < ship.size; i++){
                     let X = ship.x + i*inx;
                     let Y = ship.y + i*iny;
@@ -273,14 +274,14 @@ const battleships : GameConstructor = class battleships implements Game{
                         //check if ship sunk
                         shot.hit = true;
                         console.log(shots);
-                        
+                        hit = true;
                     }
                     for(let shot of shots){
                         if(shot.x == X && shot.y == Y && shot.hit)
                             hits--;
                     }
                 }
-                if(hits == 0){
+                if(hits == 0 && hit){
                     player.socket.emit("sunk", ship);
                     console.log("SUNK");
                 }
