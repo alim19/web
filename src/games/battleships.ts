@@ -111,9 +111,9 @@ const battleships : GameConstructor = class battleships implements Game{
                 let player_number = json.players.indexOf(args.username);
                 debug(player_number)
                 let player_data = results.results.reduce((acc : any, cur : any) => cur.data_key == player_number+1 ? cur : acc, null);
-                debug(player_data);
-                let player_json = JSON.parse(player_data.data_value);
-                if(player_json){
+                if(player_data){
+                    debug(player_data);
+                    let player_json = JSON.parse(player_data.data_value);
                     debug(player_json);
                     socket.emit("place", player_json);
                 }
