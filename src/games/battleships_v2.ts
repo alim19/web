@@ -287,6 +287,12 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 					if (shot.hit && shot.x == X && shot.y == Y) hits--;
 				}
 			}
+			console.log({
+				hits,
+				shot,
+				hit,
+				ship
+			});
 			if (hits == 0 && hit == ship) {
 				console.log("SUNK");
 				player.socket.emit("sunk", [ship]);

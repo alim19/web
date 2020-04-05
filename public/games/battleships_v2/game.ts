@@ -257,6 +257,10 @@ class base extends p5 {
 }
 
 class defend extends base {
+
+	placeButton;
+	rotateButton;
+
 	constructor(socket) {
 		super(socket, "defend")
 		this.socket.removeAllListeners();
@@ -273,6 +277,27 @@ class defend extends base {
 		// 	rotation: rotation.NORTH,
 		// 	size: 5,
 		// }
+		this.createElement("br");
+		this.placeButton = this.createButton("Place");
+		this.placeButton.mousePressed(() => this.placeShip(this.placing));
+		this.rotateButton = this.createButton("Rotate");
+		this.rotateButton.mousePressed(() => {
+			switch (this.placing.rotation) {
+				case rotation.NORTH:
+					this.placing.rotation = rotation.EAST;
+					break;
+
+				case rotation.EAST:
+					this.placing.rotation = rotation.SOUTH;
+					break;
+				case rotation.SOUTH:
+					this.placing.rotation = rotation.WEST;
+					break;
+				case rotation.WEST:
+					this.placing.rotation = rotation.NORTH;
+					break;
+			}
+		});
 
 
 	}
@@ -340,6 +365,7 @@ class attack extends base {
 
 	setup() {
 		this.createCanvas(500, 500);
+		this.createElement("br");
 		this.fireButton = this.createButton("Fire!");
 		this.fireButton.size(100, 30);
 		this.fireButton.mouseClicked(() => {
@@ -362,6 +388,7 @@ class attack extends base {
 				this.shots.push(...shot);
 			}),
 			this.socket.on("sunk", (ships: ship[]) => {
+				console.log("sunk");
 				this.placed_ships.push(...ships);
 			})
 	}
