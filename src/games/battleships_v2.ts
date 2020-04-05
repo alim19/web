@@ -241,14 +241,14 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		if (game_data.data.turn != player.player_no) return false;
 		let opponent_ships: ship[] = game_data.json[(player.player_no + 1) % 2 + 1];
 		if (!opponent_ships) return false;
-		console.log("MARK 1")
+		// console.log("MARK 1")
 		//check not duplicate
 		let shots: shot[] = game_data.json[player.player_no + 3];
 		if (shots.reduce((dup: boolean, s) => dup || (s.x == shot.x && s.y == shot.y), false)) {
 			player.socket.emit("fire");
 			return false;
 		}
-		console.log("MARK 2");
+		// console.log("MARK 2");
 		game_data.data.turn++;
 		game_data.data.turn %= 2;
 		this.db.query("UPDATE game_data SET data_value=? WHERE game_id=? AND data_key=0;", [JSON.stringify(game_data.data), game_data.id]);
@@ -287,12 +287,12 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 					if (shot.hit && shot.x == X && shot.y == Y) hits--;
 				}
 			}
-			console.log({
-				hits,
-				shot,
-				hit,
-				ship
-			});
+			// console.log({
+			// 	hits,
+			// 	shot,
+			// 	hit,
+			// 	ship
+			// });
 			if (hits == 0 && hit == ship) {
 				console.log("SUNK");
 				player.socket.emit("sunk", [ship]);
@@ -306,7 +306,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 			opp.socket.emit("shot", [shot]);
 			opp.socket.emit("fire");
 		}
-		console.log("MARK 3")
+		// console.log("MARK 3")
 		if (shot.hit) {
 			let hits = shots.reduce((count: number, shot) => count + (shot.hit ? 1 : 0), 0);
 			if (hits >= 19) {

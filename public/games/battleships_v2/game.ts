@@ -388,7 +388,7 @@ class attack extends base {
 				this.shots.push(...shot);
 			}),
 			this.socket.on("sunk", (ships: ship[]) => {
-				console.log("sunk");
+				// console.log("sunk");
 				this.placed_ships.push(...ships);
 			})
 	}
