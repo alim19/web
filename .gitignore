@@ -5,5 +5,9 @@ launch.json
 log/
 **/*.d.ts
 **/*.zip
-public/**/*.ts
-public/**/tsconfig.json
+# public/**/*.ts
+# public/**/tsconfig.json
+.jsbeautifyrc
+nodemon.json
+public/js/p5/.DS_Store
+public/js/p5/README.txt
