@@ -8,9 +8,6 @@ import {
 	Game,
 	GameConstructor
 } from "./game"
-import {
-	Socket
-} from "dgram";
 
 interface player {
 	socket: io.Socket;
@@ -142,10 +139,10 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		setTimeout(() => {
 			socket.emit("placed", ships);
 			socket.emit("place", this.ships[ships.length]);
-			if (ships.length >= 5) {
+			if (ships.length >= this.ships.length) {
 				let opponent_ships: ship[] = player_data.json[(p.player_no + 1) % 2 + 1];
 				//JSON.parse(player_data.results.reduce((acc: any, row: any) => row.data_key == (p.player_no + 1) % 2 + 1 ? row : acc, null).data_value);
-				if (opponent_ships.length >= 5)
+				if (opponent_ships.length >= this.ships.length)
 					socket.emit("battle");
 				if (p.player_no == game_data.turn)
 					socket.emit("fire");
@@ -199,7 +196,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		let game_data = await this.db.getGameData(player.game_id);
 		let ships: ship[] = game_data.json[player.player_no + 1];
 		//JSON.parse(ships_data.results[0].data_value);
-		if (ships.length == 5) return false;
+		if (ships.length >= this.ships.length) return false;
 		if (this.checkShip(ship, ships) && ship.size == this.ships[ships.length].size) {
 			//check that ships of correct length.
 			ships.push(ship);
@@ -208,7 +205,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 			player.socket.emit("placed", [ship]);
 			player.socket.emit("place", this.ships[ships.length]);
 			//check if all ships placed
-			if (ships.length >= 5 && game_data.json[(player.player_no + 1) % 2 + 1].length >= 5) {
+			if (ships.length >= this.ships.length && game_data.json[(player.player_no + 1) % 2 + 1].length >= this.ships.length) {
 				player.socket.emit("battle");
 				let opp = this.players.reduce((acc, cur) => cur.game_id == player.game_id && cur.player_no != player.player_no ? cur : acc, null);
 				opp.socket.emit("battle");
@@ -309,7 +306,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		// console.log("MARK 3")
 		if (shot.hit) {
 			let hits = shots.reduce((count: number, shot) => count + (shot.hit ? 1 : 0), 0);
-			if (hits >= 19) {
+			if (hits >= this.ships.reduce((count: number, ship) => count + ship.size, 0)) {
 				//winner
 				player.socket.emit("win");
 				player.socket.emit("reset");
@@ -325,7 +322,11 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 	}
 
 	async reset(game_id: number) {
-		this.db.query(`DELETE FROM game_data WHERE game_id = ${game_id} AND data_key > 0; SELECT * FROM game_data WHERE game_id = ${game_id} AND data_key = 0 LIMIT 1;`);
+		await this.db.query(`DELETE FROM game_data WHERE game_id = ${game_id} AND data_key > 0;`);
+		await this.db.query("INSERT INTO game_data (game_id, data_key, data_value) VALUES\
+		(?, 1, '[]'),(?, 2, '[]');", [game_id, game_id]);
+		let players: player[] = this.players.filter(p => p.game_id == game_id);
+		players.map(p => p.socket.emit("place", this.ships[0]));
 	}
 
 
