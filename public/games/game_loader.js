@@ -18,7 +18,8 @@ function setup() {
 
 	GamesList = createDiv();
 	createP("Current running games: ").parent(GamesList);
-	GamesList = createElement("ul").parent(GamesList);
+	// createElement("br").parent(GamesList);
+	GamesList = createElement("div").parent(GamesList);
 
 	refreshList();
 
@@ -42,12 +43,18 @@ function refreshList() {
 			while (children.length > 0) children[0].remove();
 
 			for (let _game of json) {
-				let child = createElement("li");
+				let child = createElement("div");
 				child.parent(GamesList);
-				child.html(JSON.stringify(_game));
-				let join_button = createButton("Join");
-				join_button.parent(child);
-				join_button.mouseClicked(joinGame.bind(_game));
+				child.html(`Join game:<br/>${_game.name}<br/>Players:${_game.players}`);
+				// let join_button = createButton("Join");
+				// join_button.parent(child);
+				child.mouseClicked(joinGame.bind(_game));
+				child.style("text-align", "center")
+				child.style("float", "left")
+				child.style("padding", "7px")
+				child.style("background-color", "lightblue")
+				child.style("margin", "2px")
+
 				// child.html(`<a href='/games/${game}/game.html?id=${_game.id}'>Join</a>`, true);
 				// createElement("li", `${JSON.stringify(game)}`).parent(GamesList);
 			}
