@@ -6,7 +6,10 @@ import {
 } from "../gamedb";
 import {
 	Game,
-	GameConstructor
+	GameConstructor,
+	GameDataPacket,
+	GameCreateData,
+	GameJoinParams
 } from "./game"
 
 interface player {
@@ -36,10 +39,7 @@ interface shot {
 		hit: boolean,
 }
 
-const battleships_v2: GameConstructor = class battleships_v2 implements Game {
-	db: GameDB;
-	public readonly name: string = "battleships_v2";
-	public readonly id: number = 3;
+const battleships_v2: GameConstructor = class battleships_v2 extends Game {
 	players: player[] = [];
 	ships: ship[] = [{
 			size: 5,
@@ -77,39 +77,37 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 	y: number = 10;
 
 	constructor(db_server: GameDB) {
-		this.db = db_server;
-		// this.db.query("")
+		super("battleships_v2", db_server);
 	}
 
-	async create(creator: string, password ? : string): Promise < number > {
-		let game_data: game = {
-			id: -1,
-			type_id: this.id,
-			data: {
-				name: creator,
-				players: [],
-				password: password
-			}
-		}
+	async data(socket: io.Socket, game_data: GameDataPacket) {
+
+	}
+
+	async create(d: GameCreateData): Promise < number > {
+		await this.ready;
+
+		let id: number;
 		try {
-			game_data = await this.db.createGame(game_data);
+			id = await super.create(d);
 			this.db.query("INSERT INTO game_data (game_id, data_key, data_value) VALUES\
 			(?, 1, '[]'),(?, 2, '[]');",
-				[game_data.id, game_data.id])
+				[id, id]);
 		} catch (e) {
 			console.log("ERROR: creating game");
 			console.log(e);
 		}
-		return game_data.id;
+		return id;
 	}
 
 	async destroy() {}
 
-	async join(socket: io.Socket, args: any): Promise < boolean > {
+	async join(socket: io.Socket, args: GameJoinParams): Promise < boolean > {
+		await this.ready;
 
 		let p: player = {
-			game_id: args.id,
-			username: args.username,
+			game_id: args.gameId,
+			username: args.userName,
 			socket: socket,
 			player_no: -1,
 		}
@@ -118,7 +116,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		let game_data: game_data = JSON.parse(game.results[0].data_value);
 		console.log(game_data);
 		if (game_data.password) {
-			if (args.password != game_data.password) {
+			if (args.gamePassword != game_data.password) {
 				return false;
 			}
 		}
@@ -132,10 +130,11 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		if (p.player_no >= 2) return false;
 
 		game_data.players[p.player_no] = p.username;
-		this.db.query(`UPDATE game_data SET data_value=? WHERE game_id=? AND data_key=0;`, [JSON.stringify(game_data), p.game_id]);
+		await this.db.query(`UPDATE game_data SET data_value=? WHERE game_id=? AND data_key=0;`, [JSON.stringify(game_data), p.game_id]);
 		let player_data = await this.db.getGameData(p.game_id);
 		let ships: ship[] = player_data.json[p.player_no + 1];
 		//JSON.parse(player_data.results.reduce((acc: any, row: any) => row.data_key == p.player_no + 1 ? row : acc, null).data_value)
+		// if (ships) {
 		setTimeout(() => {
 			socket.emit("placed", ships);
 			socket.emit("place", this.ships[ships.length]);
@@ -157,6 +156,7 @@ const battleships_v2: GameConstructor = class battleships_v2 implements Game {
 		console.log("sent placed ships");
 		console.log(ships);
 		console.log(this.ships[ships.length]);
+		// }
 
 
 		socket.on("place", (ship: ship) => this.place(p, ship));

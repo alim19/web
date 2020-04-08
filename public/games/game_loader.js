@@ -43,17 +43,13 @@ function refreshList() {
 			while (children.length > 0) children[0].remove();
 
 			for (let _game of json) {
+				let s = createElement("span");
+				s.parent(GamesList);
+				s.addClass("game");
 				let child = createElement("div");
-				child.parent(GamesList);
+				child.parent(s);
 				child.html(`Join game:<br/>${_game.name}<br/>Players:${_game.players}`);
-				// let join_button = createButton("Join");
-				// join_button.parent(child);
 				child.mouseClicked(joinGame.bind(_game));
-				child.style("text-align", "center")
-				child.style("float", "left")
-				child.style("padding", "7px")
-				child.style("background-color", "lightblue")
-				child.style("margin", "2px")
 
 				// child.html(`<a href='/games/${game}/game.html?id=${_game.id}'>Join</a>`, true);
 				// createElement("li", `${JSON.stringify(game)}`).parent(GamesList);
@@ -81,15 +77,28 @@ function joinGame() {
 
 }
 
-function createGame() {
+async function createGame() {
+	let data = {};
+	if (window.customCreate) {
+		let custom_data = window.customCreate();
+		if (custom_data instanceof Promise) {
+			data = await custom_data;
+		}
+		if (data == null) return;
+	} else {
+		let name = prompt("Please enter game name", "name");
+		if (name == null) return;
+		let password = prompt("Enter password, \nor leave blank for open game.");
+		// let data = {
+		// 	name: name,
+		// 	password: password,
+		// };
 
-	let name = prompt("Please enter game name", "name");
-	if (name == null) return;
-	let password = prompt("Enter password, \nor leave blank for open game.");
-	let data = {
-		name: name,
-		password: password,
-	};
+		data.name = name;
+		data.password = password;
+
+	}
+
 
 	fetch(`/games/api/create/${game}`, {
 		method: "POST",
@@ -105,3 +114,5 @@ function createGame() {
 function draw() {
 
 }
+
+new p5(null, "container");

@@ -113,11 +113,10 @@ function _setup() {
 	} else {
 		gameID = params.id;
 	}
-
 	let join_data = {
-		username: username,
-		password: game_password,
-		id: gameID,
+		gameId: gameID,
+		userName: username,
+		gamePassword: game_password,
 	}
 	socket.on("disconnect", console.log);
 	socket.emit("join", join_data);

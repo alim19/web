@@ -26,6 +26,10 @@ export interface QueryResults {
 	fields ? : mysql.FieldInfo[];
 }
 
+export interface GameType {
+	name: string,
+		id: number,
+}
 
 export class GameDB {
 	pool: mysql.Pool;
@@ -83,13 +87,13 @@ export class GameDB {
 	}
 
 	async getGameData(gameId: number, key ? : number): Promise < game > {
-		let query: string = "SELECT game_id,active_game_type_id,data_key,data_value FROM game_data, active_games WHERE game_id=active_game_id AND game_id=?";
+		let query: string = "SELECT game_id,active_game_type_id,data_key,data_value FROM game_data, active_games WHERE game_id=active_game_id AND game_id=?  AND (data_key = 0 OR ";
 		let args: any[] = [gameId];
 		if (key) {
-			query += " AND data_key=?;";
+			query += " data_key=?);";
 			args.push(key);
 		} else {
-			query += ";";
+			query += " 1 );";
 		}
 		let results = await this.query(query, args);
 		let json = {};
@@ -98,11 +102,69 @@ export class GameDB {
 			json[row.data_key] = JSON.parse(row.data_value);
 		}
 		let game: game = {
-			id: results.results.reduce((acc: any, cur: any) => cur.data_key == 0 ? cur : acc, null).game_id,
+			id: results.results[0].game_id,
 			type_id: results.results[0].active_game_type_id,
 			data: JSON.parse(results.results.reduce((acc: any, cur: any) => cur.data_key == 0 ? cur : acc, null).data_value),
 			json: json
 		}
 		return game;
+	}
+
+	async getConnection(): Promise < mysql.PoolConnection > {
+		return new Promise((resolve, reject) => {
+			this.pool.getConnection((err, conn) => {
+				if (err) reject(err);
+				else resolve(conn);
+			})
+		})
+	}
+
+	async setGameData(gameId: number, json: any, key: number | Array < number > ) {
+		if (key instanceof Array && json instanceof Array) {
+			let conn = await this.getConnection();
+			for (let _k in key) {
+				let k = key[_k];
+				try {
+					await new Promise((resolve, reject) => {
+						conn.query("UPDATE game_data SET data_value=? WHERE game_id=? AND data_key=?;", [json[_k], gameId, k], (err, res, fields) => {
+							console.log(res);
+							if (err) reject(err);
+							else resolve(res);
+						})
+					});
+				} catch (err) {
+					console.log(err);
+					//insert instead of update
+				};
+			}
+			conn.release();
+		} else {
+			try {
+				this.query("UPDATE game_data SET data_value=? WHERE game_id=? AND data_key=?;", [json, gameId, key]);
+			} catch (err) {
+
+				//insert instead of update
+			}
+		}
+	}
+
+	async getGameType(game: string | number): Promise < GameType > {
+		let query: string;
+		if (typeof(game) == "string") {
+			query = "SELECT * FROM games WHERE game_name=?";
+		} else {
+			query = "SELECT * FROM games WHERE game_id=?";
+		}
+		let {
+			results
+		} = await this.query(query, game);
+		if (results[0]) {
+			return {
+				id: results[0].game_id,
+				name: results[0].game_name,
+			}
+		} else {
+			throw null as GameType;
+		}
 	}
 }

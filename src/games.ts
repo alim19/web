@@ -9,7 +9,9 @@ import {
 } from "./debug";
 import {
 	Game,
-	GameConstructor
+	GameConstructor,
+	GameDataPacket,
+	GameJoinParams
 } from "./games/game";
 import {
 	resolve
@@ -20,6 +22,7 @@ import {
 import {
 	readFileSync
 } from "fs";
+
 
 const DB = {
 	active_games: {
@@ -72,13 +75,17 @@ const Games: GameDB = new GameDB(MYSQL_CONFIG);
 let socket;
 
 
-function joinGame(socket: io.Socket, args: any) {
+function joinGame(socket: io.Socket, args: GameJoinParams) {
 	console.log(`Join game request : `);
 	console.log(args);
+	if (!args) {
+		socket.emit("kick", "no data");
+		return;
+	}
 
 	//check game id exists
 
-	Games.query(`SELECT active_games.active_game_id, active_games.active_game_type_id, active_games.active_game_idle, game_data.data_value FROM active_games, game_data WHERE active_game_id = ? AND game_data.data_key = 0;`, [args.id])
+	Games.query(`SELECT active_games.active_game_id, active_games.active_game_type_id, active_games.active_game_idle, game_data.data_value FROM active_games, game_data WHERE active_game_id = ? AND game_data.data_key = 0;`, [args.gameId])
 		.then(res => {
 			if (res.err) {
 				console.log(res.err);
@@ -125,10 +132,14 @@ async function API(req: express.Request, res: express.Response, next: express.Ne
 			return;
 			break;
 		default:
+			let g = await getGame(paths[0]);
+			console.log(paths);
+			if (g) g.apiHandler(req, res, next);
+			else next(404);
 			break;
 	}
 
-	next();
+	// next();
 }
 
 function game_api(app: Server) {
@@ -138,12 +149,19 @@ function game_api(app: Server) {
 	socket = io(app);
 	socket.sockets.on("connection", (socket: io.Socket) => {
 		console.log(`New connection : ${socket.id}`);
-		socket.on("join", (data: any) => joinGame(socket, data));
+		socket.on("join", (data: GameJoinParams) => joinGame(socket, data));
 
 		socket.on("disconnect", (args) => {
 			console.log(`Socket disconnected : ${socket.id}`);
 		});
-
+		socket.on("game_data", async (data: GameDataPacket) => {
+			// console.log(data);
+			let game = await getGame(data.gameType);
+			if (game)
+				game.data(socket, data);
+			else
+				console.log("Unable to find game");
+		});
 	});
 
 	return {
@@ -180,8 +198,6 @@ function listGames(game: string, response: express.Response, next: express.NextF
 		.catch(console.log)
 		.catch(next)
 	return;
-
-
 }
 
 let loadedGames: Game[] = [];
@@ -195,7 +211,7 @@ function createGame(game: string, req: express.Request, res: express.Response, n
 	return getGame(game).then((game: Game) => {
 		debug(`Creating game by Alex. CHANGE`);
 		console.log(req.body);
-		game.create(req.body.name, req.body.password).then(active_game_id => {
+		game.create(req.body).then(active_game_id => {
 			res.send(`Created new ${game.name} game by ${"Alex"} with id ${active_game_id}`);
 			res.end();
 		});
@@ -209,10 +225,12 @@ function getGame(game: string | number): Promise < Game > {
 	} else {
 		query = `SELECT ${DB.games.game_id.column}, ${DB.games.game_name.column} FROM ${DB.games.table} WHERE ${DB.games.game_name.column} = ${mysql.escape(game)};`;
 	}
-
+	// console.log(query)
 	return Games.query(query)
 
 		.then(results => {
+			// console.log(results);
+			if (!results.results[0]) return null;
 			// console.log(query);
 			// console.log(results);
 			let game_id: number = results.results[0].game_id;

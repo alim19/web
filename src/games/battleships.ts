@@ -4,7 +4,10 @@ import {
 	GameInitFunction,
 	GameCreateFunction,
 	GameDestroyFunction,
-	GameConstructor
+	GameConstructor,
+	GameDataPacket,
+	GameJoinParams,
+	GameCreateData
 } from "./game";
 import {
 	debug
@@ -42,33 +45,30 @@ interface shot {
 		hit: boolean,
 }
 
-const battleships: GameConstructor = class battleships implements Game {
-
-	public readonly id: number = 1;
-	public readonly name: string = "battleships";
-
-	protected db: GameDB;
+const battleships: GameConstructor = class battleships extends Game {
 	protected players: player[] = [];
 
 	constructor(db_server: GameDB) {
+		super("battleships", db_server)
 		this.db = db_server;
 	}
+	async data(socket: io.Socket, game_data: GameDataPacket) {
+
+	}
 	// init(){}
-	async create(creator: string, password ? : string): Promise < number > {
-		debug(`Battleships creating game by ${creator}`);
+	async create(d: GameCreateData): Promise < number > {
+
+		return super.create(d);
 		return new Promise < number > ((resolve, reject) => {
 			this.db.query(`INSERT INTO active_games(active_game_type_id, active_game_idle) VALUES (${this.id}, now());`) // 
 				.then(results => {
 					// console.log(results.results);
 					resolve(results.results.insertId || -1);
 					let json_data: any = {
-						name: creator,
+						name: d.name,
 						players: [],
-						password: password
+						password: d.password
 					};
-					if (password) {
-						json_data.password = password;
-					}
 					return this.db.query(`INSERT INTO game_data(game_id, data_key, data_value) VALUES (${results.results.insertId}, 0, ?);`, JSON.stringify(json_data));
 				})
 				.then(results => {
@@ -85,7 +85,7 @@ const battleships: GameConstructor = class battleships implements Game {
 
 	}
 
-	async join(socket: io.Socket, args: any): Promise < boolean > {
+	async join(socket: io.Socket, args: GameJoinParams): Promise < boolean > {
 
 		console.log(`Joining battleships game`);
 		console.log(args);
@@ -94,13 +94,13 @@ const battleships: GameConstructor = class battleships implements Game {
 
 		//query to check if password correct etc, max number of players not reached etc
 
-		return this.db.query(`SELECT data_key, data_value FROM game_data WHERE game_id = ${args.id} AND data_key = 0;`)
+		return this.db.query(`SELECT data_key, data_value FROM game_data WHERE game_id = ${args.gameId} AND data_key = 0;`)
 			.then(results => {
 				let row = results.results[0];
 				// console.log(row.data_value);
 				let json = JSON.parse(row.data_value);
 				// console.log(json);
-				if (json.password !== args.password) {
+				if (json.password !== args.gamePassword) {
 					socket.emit("disconnect", "Incorrect password");
 					socket.disconnect(true);
 					return false;
@@ -112,18 +112,18 @@ const battleships: GameConstructor = class battleships implements Game {
 				}
 				// socket.emit("welcome", "Successfully joined game!");
 				console.log("Successfully joined game!");
-				json.players.push(args.username);
+				json.players.push(args.userName);
 				// console.log(json);
 				console.trace("JOINING USERS");
-				this.db.query(`UPDATE game_data SET data_value = ${escape(JSON.stringify(json))} WHERE game_id = ${args.id} AND data_key = 0;`)
+				this.db.query(`UPDATE game_data SET data_value = ${escape(JSON.stringify(json))} WHERE game_id = ${args.gameId} AND data_key = 0;`)
 					.then(() => {
-						return this.db.query(`SELECT data_key, data_value FROM game_data WHERE game_id = ${args.id};`)
+						return this.db.query(`SELECT data_key, data_value FROM game_data WHERE game_id = ${args.gameId};`)
 					})
 					.then(results => {
 						//player number
 						console.log(results.results);
 						let json = JSON.parse(results.results.reduce((acc: any, cur: any) => cur.data_key == 0 ? cur : acc, null).data_value);
-						let player_number = json.players.indexOf(args.username);
+						let player_number = json.players.indexOf(args.userName);
 						debug(player_number)
 						let player_data = results.results.reduce((acc: any, cur: any) => cur.data_key == player_number + 1 ? cur : acc, null);
 						if (player_data) {
@@ -147,8 +147,8 @@ const battleships: GameConstructor = class battleships implements Game {
 
 				let player: player = {
 					socket: socket,
-					game_id: args.id,
-					username: args.username,
+					game_id: args.gameId,
+					username: args.userName,
 				}
 
 				this.players.push(player);

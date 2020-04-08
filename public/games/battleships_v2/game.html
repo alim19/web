@@ -2,26 +2,47 @@
 <html>
 
 <head>
+	<title>Battleships-V2.0</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 	<script src="/js/p5/p5.js"></script>
-	<!-- <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"></script> -->
-	<script src="/js/p5_build.js"></script>
 	<script src="./game.js"></script>
+	<link rel="stylesheet" href="/css/main.css">
 </head>
 
 <body>
-	<a href="./index.html">&lt_Back to games</a><br>
-	<div id="game">
-		<div id="defend" style="float: left; padding: 10px;">
+	<div id="header">
+		<h1>
+			<a href="/" id="home">
+				Alex Mansfield's web server!
+			</a>
+		</h1>
+	</div>
+	<div id="subheader">
+
+		<h1>
+			Battleships-V2.0 game
+		</h1>
+
+		<a href="../">Games/</a><a href="./">Battleships-V2/</a>
+	</div>
+	<div id="container">
+		<div id="game">
+			<span style="display: inline-block;">
+				<div id="defend" style="padding: 10px;">
+
+				</div>
+			</span>
+			<span style="display: inline-block;">
+				<div id="attack" style="padding: 10px">
+
+				</div>
+			</span>
 
 		</div>
-
-		<div id="attack" style="float: left;padding: 10px">
-
-		</div>
+	</div>
+	<div id="footer">
 
 	</div>
-
 </body>
 
 </html>

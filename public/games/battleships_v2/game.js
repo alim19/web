@@ -18,11 +18,12 @@ const cookies = document.cookie
 const URLParams = new window.URLSearchParams(window.location.search);
 //@ts-ignore
 const _socket = io();
-_socket.emit("join", {
-    username: cookies.username,
-    password: cookies.game_password,
-    id: URLParams.get("id"),
-});
+let joinParams = {
+    gameId: URLParams.get("id"),
+    userName: cookies.username,
+    gamePassword: cookies.game_password,
+};
+_socket.emit("join", joinParams);
 _socket.on("kick", (reason) => {
     console.log(reason);
     window.location.href = "./";
@@ -294,7 +295,7 @@ class attack extends base {
         this.createCanvas(500, 500);
         this.createElement("br");
         this.fireButton = this.createButton("Fire!");
-        this.fireButton.size(100, 30);
+        // this.fireButton.size(100, 30);
         this.fireButton.mouseClicked(() => {
             // this.shots.push(this.firing);
             this.socket.emit("fire", this.firing);

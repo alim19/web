@@ -69872,8 +69872,8 @@
 						}
 
 						var context = this._isGlobal ? window : this;
-						var userSetup = context.setup.bind(this);
-						var userDraw = context.draw.bind(this);
+						var userSetup = context.setup; //.bind(this);
+						var userDraw = context.draw; //.bind(this);
 						if (typeof userDraw === 'function') {
 							if (typeof userSetup === 'undefined') {
 								context.scale(context._pixelDensity, context._pixelDensity);
@@ -69890,7 +69890,7 @@
 								context._registeredMethods.pre.forEach(callMethod);
 								this._inUserDraw = true;
 								try {
-									userDraw();
+									userDraw.call(this);
 								} finally {
 									this._inUserDraw = false;
 								}
