@@ -1,5 +1,6 @@
 /// <reference path="../../../p5.global-mode.d.ts" />
 /// <reference path="../../../socket.io.d.ts" />
+/// <reference path="../game.ts" />
 
 
 interface GameDataPacket {
@@ -19,35 +20,9 @@ interface Game {
 		gameToken: string,
 }
 
-const cookies: any = document.cookie
-	.split(';')
-	.reduce((res, c) => {
-		const [key, val] = c.trim().split('=').map(decodeURIComponent)
-		try {
-			return Object.assign(res, {
-				[key]: JSON.parse(val)
-			})
-		} catch (e) {
-			return Object.assign(res, {
-				[key]: val
-			})
-		}
-	}, {});
-const params: any = new window.URLSearchParams(window.location.search);
-
-//@ts-ignore
-let _socket = io();
-
-
-_socket.on("connect", () => {
-	_socket.emit("join", {
-		gameId: params.get("id"),
-		userName: cookies["username"],
-	});
-	_socket.removeAllListeners();
-	_socket.on("welcome", data => {
-		new backgammon(_socket);
-	})
+_socket.on("welcome", data => {
+	console.log("starting game");
+	new backgammon(_socket);
 })
 
 class backgammon extends p5 {
@@ -56,6 +31,12 @@ class backgammon extends p5 {
 		super(() => {}, document.getElementById("game"), false);
 	}
 
-}
+	setup() {
+		this.createCanvas(1000, 600);
+	}
 
-// new backgammon(_socket);
+	draw() {
+		this.background(this.color("brown"));
+	}
+
+}

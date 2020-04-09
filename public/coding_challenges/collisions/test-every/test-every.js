@@ -1,12 +1,12 @@
 /// <reference path="../../../../p5.global-mode.d.ts"/>
-var count;
-var countSlider;
-var slider_label;
-var frCounter;
-var fr = 0;
-var circles = [];
+let count;
+let countSlider;
+let slider_label;
+let frCounter;
+let fr = 0;
+let circles = [];
 function setup() {
-    var params = getURLParams();
+    let params = getURLParams();
     if (params["count"]) {
         count = params["count"];
     }
@@ -31,7 +31,7 @@ function draw() {
     console.log(count);
     slider_label.elt.innerText = (count);
     fr = fr + (frameRate() - fr) / 8;
-    frCounter.elt.innerText = ", FrameRate: " + Math.floor(fr);
+    frCounter.elt.innerText = `, FrameRate: ${Math.floor(fr)}`;
     while (circles.length > count) {
         circles.pop();
     }
@@ -39,64 +39,63 @@ function draw() {
         circles.push(new Circle(Math.random() * width, Math.random() * height, width * height / (1500 * Math.sqrt(count))));
     }
     background(0);
-    for (var i = 0; i < circles.length; i++) {
-        for (var j = 0; j < circles.length; j++) {
+    for (let i = 0; i < circles.length; i++) {
+        for (let j = 0; j < circles.length; j++) {
             if (circles[i] != circles[j] && circles[i].intersects(circles[j])) {
                 circles[i].setHiglight(true);
                 circles[j].setHiglight(true);
             }
         }
     }
-    for (var _i = 0, circles_1 = circles; _i < circles_1.length; _i++) {
-        var c = circles_1[_i];
+    for (let c of circles) {
         c.draw();
         c.move();
         c.setHiglight(false);
     }
 }
-var Circle = /** @class */ (function () {
-    function Circle(x, y, r) {
+class Circle {
+    constructor(x, y, r) {
         this.x = x;
         this.y = y;
         this.r = r;
         this.highlight = false;
     }
-    Circle.prototype.getRadius = function () {
+    getRadius() {
         return this.r;
-    };
-    Circle.prototype.getX = function () {
+    }
+    getX() {
         return this.x;
-    };
-    Circle.prototype.getY = function () {
+    }
+    getY() {
         return this.y;
-    };
-    Circle.prototype.setHiglight = function (b) {
+    }
+    setHiglight(b) {
         this.highlight = b;
-    };
-    Circle.prototype.move = function () {
+    }
+    move() {
         this.x += Math.random() * 5 - 2.5;
         this.y += Math.random() * 5 - 2.5;
-    };
-    Circle.prototype.draw = function () {
+    }
+    draw() {
         fill(100, 100, 100);
         if (this.highlight) {
             fill(180, 180, 180);
         }
         noStroke();
         ellipse(this.x, this.y, this.r * 2);
-    };
-    Circle.prototype.intersects = function (c) {
-        var minD = c.getRadius() + this.r;
+    }
+    intersects(c) {
+        let minD = c.getRadius() + this.r;
         minD *= minD;
-        var dX = c.getX() - this.x;
+        let dX = c.getX() - this.x;
         dX *= dX;
-        var dY = c.getY() - this.y;
+        let dY = c.getY() - this.y;
         dY *= dY;
         if (dX + dY < minD) {
             return true;
         }
         return false;
-    };
-    return Circle;
-}());
+    }
+}
 new p5(null, document.getElementById("container"));
+//# sourceMappingURL=test-every.js.map
