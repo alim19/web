@@ -1,18 +1,17 @@
 Visualisers.push({
     name: "spiral",
-    fxn: (arr, c) => {
+    fxn: (arr, c, cfn) => {
         c.background(180, 180, 180);
         c.push();
         let r = 10;
         let scale = Math.min(c.width, c.height) / 2 - r;
         c.translate(c.width / 2, c.height / 2);
-        let a = arr.getArr();
+        let a = arr.arr;
         c.noStroke();
-        c.colorMode(HSB);
         c.angleMode("degrees");
         for (let i = 0; i < a.length; i++) {
             let pScale = a[i] / a.length;
-            let col = c.color(pScale * 360, 100, 100);
+            let col = cfn(c, pScale, arr.read[i], arr.written[i]);
             c.fill(col);
             c.ellipse(pScale * scale, 0, r * 2);
             c.rotate(360 / a.length);

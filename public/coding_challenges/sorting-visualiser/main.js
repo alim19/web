@@ -6,8 +6,11 @@ let sBar;
 let Arr;
 let Algo;
 let AlgoName;
+let ColFxn;
 let Vis;
 let visSelect;
+let colSelect;
+let shufSelect;
 let algoSelect;
 let sOpts;
 let sReset;
@@ -20,6 +23,7 @@ let speed;
 //@ts-ignore
 let count = 0;
 function setup() {
+    ColFxn = Colors[0].fxn;
     params = getURLParams();
     if (params["count"])
         Arr = new WatchedArray(parseInt(params["count"]));
@@ -29,6 +33,42 @@ function setup() {
         speed = parseFloat(params["speed"]);
     else
         speed = 1;
+    createConfigBar();
+    createCanvas(windowWidth - 40, 700);
+}
+function draw() {
+    if (Algo) {
+        while (count > 1) {
+            Algo.sortIteration();
+            count--;
+        }
+        count += speed;
+        if (Algo.getComplete()) {
+            Algo = null;
+            if (AlgoName == "shuffle") {
+                shuffled = true;
+                Arr.resetStats();
+            }
+            else {
+                shuffled = false;
+            }
+            sorting = false;
+            AlgoName = null;
+        }
+    }
+    sAccessors.html(`Accesses ${Arr.reads} | `);
+    sWrites.html(`Writes ${Arr.writes}`);
+    Vis = Visualisers.reduce((v, c) => c.name == visSelect.value() ? c.fxn : v, null);
+    if (Vis)
+        Vis(Arr, this, ColFxn);
+    // console.log(Arr.written.reduce((c, _c) => c + (_c ? 1 : 0), 0));
+    Arr.written = [false];
+    Arr.read = [false];
+}
+function windowResized() {
+    resizeCanvas(windowWidth - 30, height);
+}
+function createConfigBar() {
     //@ts-ignore
     Bar = createDiv();
     Bar.id("bar");
@@ -41,19 +81,44 @@ function setup() {
         //@ts-ignore
         visSelect.option(v.name);
     }
+    colSelect = createSelect(false);
+    colSelect.parent(sBar);
+    for (let c of Colors) {
+        //@ts-ignore
+        colSelect.option(c.name);
+    }
+    colSelect.input(setColScheme);
+    setColScheme();
+    shufSelect = createSelect(false);
+    shufSelect.parent(sBar);
+    for (let s of Shuffles) {
+        //@ts-ignore
+        shufSelect.option(s.name);
+    }
+    //@ts-ignore
+    shufSelect.input(() => createOptSels(shufSelect.value()));
     //@ts-ignore
     let ShuffleButton = createButton("Shuffle");
     ShuffleButton.parent(sBar);
     ShuffleButton.mouseClicked(() => {
-        Algo = new FisherYates(Arr);
-        AlgoName = "shuffle";
-        // shuffled = false;
-        sorting = true;
+        if (shufSelect.elt.value) {
+            let A = Shuffles.reduce((a, c) => c.name == shufSelect.elt.value ? c : a, null);
+            let AlgoCon = A.constructor;
+            if (AlgoCon) {
+                Algo = new AlgoCon(Arr);
+                AlgoName = "shuffle";
+                //set opts
+                let opts = document.getElementsByClassName("sort_opt");
+                if (A.opts)
+                    for (let elem of opts) {
+                        let id = elem.id.split(':')[1];
+                        //@ts-ignore
+                        Algo.setOpt(id, A.opts[id].reduce((a, c) => c[0] == elem.value ? c[1] : a, -1));
+                    }
+            }
+        }
     });
-    ShuffleButton.doubleClicked(() => {
-        if (Algo)
-            Algo.sort();
-    });
+    ShuffleButton.doubleClicked(finishAlgo);
     algoSelect = createSelect(false);
     algoSelect.parent(sBar);
     for (let a of Algorithms) {
@@ -61,7 +126,8 @@ function setup() {
         algoSelect.option(a.name);
     }
     algoSelect.value(params["algo"]);
-    algoSelect.input(createOptSels);
+    //@ts-ignore
+    algoSelect.input(() => createOptSels(algoSelect.value()));
     //@ts-ignore
     let SortButton = createButton("Sort");
     SortButton.parent(sBar);
@@ -76,19 +142,17 @@ function setup() {
                     AlgoName = algoSelect.elt.value;
                     //set opts
                     let opts = document.getElementsByClassName("sort_opt");
-                    for (let elem of opts) {
-                        let id = elem.id.split(':')[1];
-                        //@ts-ignore
-                        Algo.setOpt(id, A.opts[id].reduce((a, c) => c[0] == elem.value ? c[1] : a, -1));
-                    }
+                    if (A.opts)
+                        for (let elem of opts) {
+                            let id = elem.id.split(':')[1];
+                            //@ts-ignore
+                            Algo.setOpt(id, A.opts[id].reduce((a, c) => c[0] == elem.value ? c[1] : a, -1));
+                        }
                 }
             }
         }
     });
-    SortButton.doubleClicked(() => {
-        if (Algo)
-            Algo.sort();
-    });
+    SortButton.doubleClicked(finishAlgo);
     //@ts-ignore
     sAccessors = createSpan();
     sAccessors.parent(Bar);
@@ -117,44 +181,17 @@ function setup() {
     // resetButton.style("position", "absolute");
     // resetButton.style("right", "0");
     // resetButton.style("position", "absolute");
-    createOptSels();
-    createCanvas(windowWidth - 40, 700);
+    //@ts-ignore
+    createOptSels(shufSelect.value());
+    //@ts-ignore
+    createOptSels(algoSelect.value());
 }
-function draw() {
-    if (Algo) {
-        while (count > 1) {
-            Algo.sortIteration();
-            count--;
-        }
-        count += speed;
-        if (Algo.getComplete()) {
-            Algo = null;
-            if (AlgoName == "shuffle") {
-                shuffled = true;
-                Arr.resetStats();
-            }
-            else {
-                shuffled = false;
-            }
-            sorting = false;
-            AlgoName = null;
-        }
-    }
-    sAccessors.html(`Accesses ${Arr.getAccesses()} | `);
-    sWrites.html(`Writes ${Arr.getWrites()}`);
-    Vis = Visualisers.reduce((v, c) => c.name == visSelect.value() ? c.fxn : v, null);
-    if (Vis)
-        Vis(Arr, this);
-}
-function windowResized() {
-    resizeCanvas(windowWidth - 30, height);
-}
-function createOptSels() {
+function createOptSels(algoName) {
     let old_opts = document.getElementsByClassName("sort_opt");
     while (old_opts.length)
         old_opts[0].remove();
     //create new opts
-    let algoOpts = Algorithms.reduce((a, c) => c.name == algoSelect.elt.value ? c : a, null).opts;
+    let algoOpts = Algorithms.concat(Shuffles).reduce((a, c) => c.name == algoName ? c : a, null).opts;
     if (algoOpts) {
         for (let opt_key in algoOpts) {
             let optSel = createSelect(false);
@@ -172,6 +209,13 @@ function createOptSels() {
             });
         }
     }
+}
+function setColScheme() {
+    ColFxn = Colors.reduce((a, c) => c.name == colSelect.value() ? c : a, null).fxn;
+}
+function finishAlgo() {
+    if (Algo)
+        Algo.sort();
 }
 // new p5(null, document.getElementById("sorter"));
 //@ts-ignore

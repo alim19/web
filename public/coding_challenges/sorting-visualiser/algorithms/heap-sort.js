@@ -79,7 +79,7 @@ class HeapSort extends Algorithm {
             filtered = true;
         }
         //check
-        let a = this.elems.getArr();
+        let a = this.elems.arr;
         if (((fp * 2 + 1) < this.heapSize && a[fp] < a[fp * 2 + 1]) || ((fp * 2 + 2) < this.heapSize && a[fp] < a[fp * 2 + 2])) {
             console.error(`INVALID HEAP index ${fp} : ${a[fp]} => ${a[fp * 2 + 1]}, ${a[fp * 2 + 2]}`);
             console.log({
@@ -97,7 +97,7 @@ class HeapSort extends Algorithm {
         return this.heapSize <= 0;
     }
     verifyMaxHeap() {
-        let a = this.elems.getArr();
+        let a = this.elems.arr;
         for (let i = 0; i < this.heapSize; i++) {
             let p = a[i];
             let childIdx = i * 2 + 1;

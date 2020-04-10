@@ -9,4 +9,5 @@ class Algorithm {
     }
 }
 let Algorithms = [];
+let Shuffles = [];
 //# sourceMappingURL=algo.js.map

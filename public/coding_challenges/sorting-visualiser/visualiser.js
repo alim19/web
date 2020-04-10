@@ -1,49 +1,76 @@
 /// <reference path="../../../p5.global-mode.d.ts" />
 class WatchedArray {
     constructor(size) {
-        this.accesses = 0;
-        this.writes = 0;
-        this.arr = [];
+        this._reads = 0;
+        this._writes = 0;
+        this._arr = [];
+        this._read = [];
+        this._written = [];
         for (let i = 0; i < size; i++) {
-            this.arr[i] = i;
+            this._arr[i] = i;
+            this._read[i] = false;
+            this._written[i] = false;
         }
-        this.length = size;
+        this._length = size;
+        // this._read = new Array < boolean > (size).map(b => false);
+        // this._written = new Array < boolean > (size).map(b => false);
     }
     resetStats() {
-        this.accesses = 0;
-        this.writes = 0;
-    }
-    getAccesses() {
-        return this.accesses;
-    }
-    getWrites() {
-        return this.writes;
+        this._reads = 0;
+        this._writes = 0;
     }
     get(idx) {
-        if (idx >= this.length)
+        if (idx >= this._length)
             console.error(`Invalid index : ${idx}`);
-        this.accesses++;
-        return this.arr[idx];
+        this._reads++;
+        this._read[idx] = true;
+        return this._arr[idx];
     }
     set(idx, val) {
-        if (idx >= this.length)
+        if (idx >= this._length)
             console.error(`Invalid index : ${idx}`);
-        this.writes++;
-        this.arr[idx] = val;
-    }
-    getArr() {
-        return this.arr;
+        this._writes++;
+        this._written[idx] = true;
+        this._arr[idx] = val;
     }
     swap(idx1, idx2) {
-        if (idx1 >= this.length)
+        if (idx1 >= this._length)
             console.error(`Invalid index : ${idx1}`);
-        if (idx2 >= this.length)
+        if (idx2 >= this._length)
             console.error(`Invalid index : ${idx2}`);
         // this.accesses += 2;
-        this.writes += 2;
-        let tmp = this.arr[idx1];
-        this.arr[idx1] = this.arr[idx2];
-        this.arr[idx2] = tmp;
+        this._writes += 2;
+        let tmp = this._arr[idx1];
+        this._arr[idx1] = this._arr[idx2];
+        this._arr[idx2] = tmp;
+        this._written[idx1] = true;
+        this._written[idx2] = true;
+        this._read[idx1] = true;
+        this._read[idx2] = true;
+    }
+    get written() {
+        return this._written;
+    }
+    set written(val) {
+        this._written = this._written.map(b => false);
+    }
+    get read() {
+        return this._read;
+    }
+    set read(val) {
+        this._read = this.read.map(b => false);
+    }
+    get arr() {
+        return this._arr;
+    }
+    get length() {
+        return this._length;
+    }
+    get writes() {
+        return this._writes;
+    }
+    get reads() {
+        return this._reads;
     }
 }
 let Visualisers = [];
