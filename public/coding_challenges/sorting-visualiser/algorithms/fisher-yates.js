@@ -3,8 +3,6 @@ class FisherYates extends Algorithm {
         super(...arguments);
         this.shuffle_pos = 0;
     }
-    sort() {
-    }
     sortIteration() {
         if (this.getComplete())
             return;
@@ -17,5 +15,6 @@ class FisherYates extends Algorithm {
             return true;
         return false;
     }
+    setOpt(key, val) { }
 }
 //# sourceMappingURL=fisher-yates.js.map

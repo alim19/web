@@ -4,8 +4,6 @@ class CocktailShakerSort extends Algorithm {
         this.noIters = 0;
         this.position = 0;
     }
-    sort() {
-    }
     sortIteration() {
         let a = this.elems.get(this.position);
         let b = this.elems.get(this.position + 1);
@@ -18,7 +16,7 @@ class CocktailShakerSort extends Algorithm {
         else
             this.position--;
         // console.log(this.position, this.noIters)
-        if ((this.position >= (this.elems.length - Math.ceil(this.noIters / 2))) || (this.position < (Math.floor(this.noIters / 2)))) {
+        if ((this.position >= (this.elems.length - Math.ceil(this.noIters / 2) - 1)) || (this.position < (Math.floor(this.noIters / 2)))) {
             this.noIters++;
             if (this.noIters % 2 == 0)
                 this.position++;
@@ -29,6 +27,7 @@ class CocktailShakerSort extends Algorithm {
     getComplete() {
         return this.noIters >= this.elems.length;
     }
+    setOpt(key, val) { }
 }
 Algorithms.push({
     name: "cocktailshaker",
