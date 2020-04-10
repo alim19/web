@@ -2,6 +2,9 @@
 <html>
 
 <head>
+
+	#{meta}
+
 	<title>
 		Sorting Algorithm Visualiser
 	</title>
@@ -10,28 +13,29 @@
 	<script src="./main.js"></script>
 	<script src="./visualiser.js"></script>
 	<script src="./algo.js"></script>
+	<script src="./color.js"></script>
 
 	<script src="./visualisers/standard.js"></script>
 	<script src="./visualisers/spiral.js"></script>
 	<script src="./visualisers/pie.js"></script>
 	<script src="./visualisers/scatter.js"></script>
 
-	<script src="./algorithms/fisher-yates.js"></script>
 	<script src="./algorithms/bubble-sort.js"></script>
 	<script src="./algorithms/cocktail-shaker-sort.js"></script>
 	<script src="./algorithms/quick-sort.js"></script>
 	<script src="./algorithms/heap-sort.js"></script>
 
+	<script src="./shuffles/fisher-yates.js"></script>
+	<script src="./shuffles/in-order.js"></script>
+	<script src="./shuffles/near-sorted.js"></script>
+
+	<script src="./colors/rainbow.js"></script>
+	<script src="./colors/simple.js"></script>
+
 </head>
 
 <body>
-	<div id="header">
-		<h1>
-			<a href="/" id="home">
-				Alex Mansfield's web server!
-			</a>
-		</h1>
-	</div>
+	#{header}
 	<div id="subheader">
 		<h1>
 			Sorting Algorithm Visualiser
@@ -46,9 +50,7 @@
 		</div>
 
 	</div>
-	<div id="footer">
-
-	</div>
+	#{footer}
 </body>
 
 </html>
