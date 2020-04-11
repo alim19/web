@@ -116,4 +116,4 @@ Algorithms.push({
     name: "heapsort",
     constructor: HeapSort,
 });
-//# sourceMappingURL=heap-sort.js.map
+//# sourceMappingURL=heap_sort.js.map

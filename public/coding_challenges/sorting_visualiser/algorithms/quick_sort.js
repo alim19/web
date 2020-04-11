@@ -107,4 +107,4 @@ Algorithms.push({
         ]
     }
 });
-//# sourceMappingURL=quick-sort.js.map
+//# sourceMappingURL=quick_sort.js.map

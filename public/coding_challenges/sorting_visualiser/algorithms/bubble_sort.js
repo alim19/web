@@ -28,4 +28,4 @@ Algorithms.push({
     name: "bubble",
     constructor: BubbleSort,
 });
-//# sourceMappingURL=bubble-sort.js.map
+//# sourceMappingURL=bubble_sort.js.map

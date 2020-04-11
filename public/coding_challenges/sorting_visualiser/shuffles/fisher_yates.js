@@ -21,4 +21,4 @@ Shuffles.push({
     name: "Fisher Yeates Shuffle",
     constructor: FisherYates,
 });
-//# sourceMappingURL=fisher-yates.js.map
+//# sourceMappingURL=fisher_yates.js.map

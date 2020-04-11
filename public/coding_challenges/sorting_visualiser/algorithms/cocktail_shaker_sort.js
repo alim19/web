@@ -33,4 +33,4 @@ Algorithms.push({
     name: "cocktailshaker",
     constructor: CocktailShakerSort,
 });
-//# sourceMappingURL=cocktail-shaker-sort.js.map
+//# sourceMappingURL=cocktail_shaker_sort.js.map
