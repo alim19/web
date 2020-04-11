@@ -4,8 +4,8 @@
 	"description": "node-based backend and frontend for web-games",
 	"main": "server.js",
 	"scripts": {
-		"run": "export PORT=80; node server.js",
-		"test": "export PORT=8080; export DEBUG=1; node server.js"
+		"run": "export PORT=443; node server.js",
+		"test": "export PORT=8443; export DEBUG=1; node server.js"
 	},
 	"author": "Alex Mansfield",
 	"license": "ISC",
@@ -17,6 +17,7 @@
 		"@types/socket.io": "^2.1.4",
 		"body-parser": "^1.19.0",
 		"express": "^4.17.1",
+		"express-force-ssl": "^0.3.2",
 		"multer": "^1.4.2",
 		"mysql": "^2.18.1",
 		"path": "^0.12.7",

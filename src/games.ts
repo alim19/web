@@ -60,7 +60,7 @@ const DB = {
 
 	}
 }
-const MYSQL_CONFIG: mysql.ConnectionConfig = JSON.parse(readFileSync("./dbconf.json").toString());
+const MYSQL_CONFIG: mysql.ConnectionConfig = JSON.parse(readFileSync(".security/dbconf.json").toString());
 const Games: GameDB = new GameDB(MYSQL_CONFIG);
 
 // POOL.getConnection((err) => {
