@@ -29,21 +29,30 @@ import {
 const upload = multer();
 const app: express.Application = express();
 const PORT: number = parseInt(process.env.PORT) || 8080;
+const DEV: boolean = process.env.DEV ? true : false;
 
 const SSL_OPTS = {
 	key: readFileSync(".security/origin.priv"),
 	cert: readFileSync(".security/origin.pem"),
 }
 
-let secServ = createServer(SSL_OPTS, app);
-secServ.listen(PORT, () => {
-	console.log(`listening on port:${PORT}`);
-});
+let server;
+if (DEV) {
+	server = app.listen(PORT, () => {
+		console.log(`listening on port:${PORT}`);
+	})
+} else {
+	server = createServer(SSL_OPTS, app)
+		.listen(PORT, () => {
+			console.log(`listening on port:${PORT}`);
+		});
+}
+
 
 // let server = app.listen(PORT, () => {
 // 	console.log(`Listening on port ${PORT}`)
 // });
-const GAMES = game_api(secServ);
+const GAMES = game_api(server);
 
 
 app.use(bodyParser.json());
